@@ -3,6 +3,9 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Rendering;
 using Microsoft.Data.Entity;
 using ASP.Models;
+using Microsoft.AspNet.Http.Internal;
+using System.Collections.Generic;
+using System;
 
 namespace ASP.Controllers
 {
@@ -16,17 +19,36 @@ namespace ASP.Controllers
         }
 
         // GET: Movies
-        public IActionResult Index(string searchString)
+        public IActionResult Index(string movieGenre, string searchString)
         {
+            var GenreQry = from m in _context.Movie
+                           orderby m.Genre
+                           select m.Genre;
+
+            var GenreList = new List<string>();
+            GenreList.AddRange(GenreQry.Distinct());
+            ViewData["movieGenre"] = new SelectList(GenreList);
+
             var movies = from m in _context.Movie
                          select m;
 
-            if (!System.String.IsNullOrEmpty(searchString))
+            if (!String.IsNullOrEmpty(searchString))
             {
                 movies = movies.Where(s => s.Title.Contains(searchString));
             }
 
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(x => x.Genre == movieGenre);
+            }
+
             return View(movies);
+        }
+
+        [HttpPost]
+        public string Index(FormCollection fc, string searchString)
+        {
+            return "From [HttpPost]Index: filter on " + searchString;
         }
 
         // GET: Movies/Details/5
@@ -56,7 +78,7 @@ namespace ASP.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(
-            [Bind("Title,ReleaseDate,Genre,Price")] Movie movie)
+            [Bind("Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
@@ -87,7 +109,7 @@ namespace ASP.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(
-            [Bind("Title,ReleaseDate,Genre,Price")] Movie movie)
+            [Bind("Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
