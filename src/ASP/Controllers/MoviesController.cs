@@ -16,9 +16,17 @@ namespace ASP.Controllers
         }
 
         // GET: Movies
-        public IActionResult Index()
+        public IActionResult Index(string searchString)
         {
-            return View(_context.Movie.ToList());
+            var movies = from m in _context.Movie
+                         select m;
+
+            if (!System.String.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Title.Contains(searchString));
+            }
+
+            return View(movies);
         }
 
         // GET: Movies/Details/5
